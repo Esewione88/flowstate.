@@ -688,11 +688,12 @@
     nav.classList.toggle('scrolled', window.scrollY > 60);
   });
 
-  // Email capture
-  function handleEmailSubmit() {
+  // Email capture + Mailchimp
+  async function handleEmailSubmit() {
     const input = document.getElementById('emailInput');
     const form = document.getElementById('emailForm');
     const success = document.getElementById('emailSuccess');
+    const btn = document.getElementById('emailBtn');
     const val = input.value.trim();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(val)) {
@@ -701,10 +702,23 @@
       setTimeout(() => { input.style.color = ''; input.placeholder = 'your@email.com'; }, 2000);
       return;
     }
+    btn.textContent = 'SAVING...';
+    btn.style.opacity = '0.7';
+    try {
+      const AUDIENCE_ID = 'd51efe1e3f';
+      const API_KEY = 'bb707cb6fceec6d3b11c8992cf1e7958-us19';
+      const DC = API_KEY.split('-')[1];
+      await fetch(`https://${DC}.api.mailchimp.com/3.0/lists/${AUDIENCE_ID}/members`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `apikey ${API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email_address: val, status: 'subscribed' })
+      });
+    } catch (err) {}
     form.style.display = 'none';
     success.style.display = 'block';
-    // In production: POST to your email service (Mailchimp, ConvertKit, etc.)
-    console.log('Email captured:', val);
   }
   document.getElementById('emailInput')?.addEventListener('keydown', e => {
     if (e.key === 'Enter') handleEmailSubmit();
